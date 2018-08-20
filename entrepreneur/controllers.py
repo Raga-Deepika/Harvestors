@@ -17,7 +17,7 @@ def entrepreneur():
     ---
     tags:
      - Entrepreneur
-    description: gets one page of entrep channel news
+    description: gets one page of entrepreneur channel news
     parameters:
      - name: category
        in: query
