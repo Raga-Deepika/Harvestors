@@ -25,9 +25,9 @@ def entrepreneur_api():
        required: true
      - name: page
        in: query
-       type: integer
+       type: string
        required: true
     """
     category = request.args.get('category')
     page = request.args.get('page')
-    return jsonify(entre_base(category=category, page=page))
+    return jsonify(entre_base(category=category, page=str(page)))

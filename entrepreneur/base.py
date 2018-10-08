@@ -1,20 +1,9 @@
 from bs4 import BeautifulSoup as bs
 from dateparser import parse
-from datetime import datetime
 import re
 import requests
 import random
-import logging
-
-
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-logger.setLevel(logging.WARNING)
-logger.setLevel(logging.ERROR)
-
-
-logging.basicConfig(filename="entrepreneur.logs",level=logging.DEBUG, format='%(asctime)s:%(name)s:%(message)s')
+from entrepreneur import logger
 
 desktop_agents = ['Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36',
                  'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36',
@@ -76,12 +65,14 @@ def entre_base(category, page):
                 card = soup.find_all('div', class_='block')
             except Exception as e:
                 card = []
+                data = []
             try:
-                unwanted_pages = soup.find('ul',class_='pagination').find_all('li')[-1]
+                unwanted_pages = soup.find('ualo',class_='pagination').find_all('li')[-1]
                 unwanted_pages.extract()
                 total_pages = soup.find('ul',class_='pagination').find_all('li')[-1].text.strip()
-            except AttributeError:
-                total_pages = None
+            except Exception as e:
+                total_pages = 1
+
             entrepreneurDict['total_pages'] = total_pages
             for item in card:
                 content = ''
@@ -136,8 +127,6 @@ def entre_base(category, page):
                 obj['source'] = 'entrepreneur'
                 data.append(obj)
             entrepreneurDict['data'] = data
-            entrepreneurDict['created_at'] = datetime.now()
-            entrepreneurDict['updated_at'] = datetime.now()
             return entrepreneurDict
     except Exception as e:
         logger.error('Error in scraping page {0} of the entrepreneur connector : {1}'.format(page, str(e)))
