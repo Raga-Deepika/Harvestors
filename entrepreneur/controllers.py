@@ -1,13 +1,13 @@
 from flask import Blueprint, jsonify
 from flask import request
-from entrepreneur.base import entre_main
+from entrepreneur.base import entre_base
 
 
 entrepreneur_blueprint = Blueprint('entrepreneur', __name__)
 
 
 @entrepreneur_blueprint.route('/get_news')
-def entrepreneur():
+def entrepreneur_api():
     """
     This is the summary defined in yaml file
     First line is the summary
@@ -17,7 +17,7 @@ def entrepreneur():
     ---
     tags:
      - Entrepreneur
-    description: gets one page of entrep channel news
+    description: gets one page of entrepreneur channel news for mergers-and-acquisitions,class-action-lawsuits and patents
     parameters:
      - name: category
        in: query
@@ -30,4 +30,4 @@ def entrepreneur():
     """
     category = request.args.get('category')
     page = request.args.get('page')
-    return jsonify(entre_main(category=category, page=page))
+    return jsonify(entre_base(category=category, page=page))
