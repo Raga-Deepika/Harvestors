@@ -2,44 +2,16 @@ from flask import Flask
 from flasgger import Swagger
 from entrepreneur.controllers import entrepreneur_blueprint
 from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.jobstores.mongodb import MongoDBJobStore
-from apscheduler.executors.pool import ThreadPoolExecutor
-from entrepreneur.controllers import entrepreneur
-
-
-class Config(object):
-    JOBS = [
-        {
-            'id': 'job1',
-            'func': 'entrepreneur:entrepreneur',
-            'args': None,
-            'trigger': 'interval',
-            'minutes': 1
-        }
-    ]
-
-    SCHEDULER_JOBSTORES = {
-        'default': MongoDBJobStore()
-    }
-
-    SCHEDULER_EXECUTORS = {
-        'default': ThreadPoolExecutor(10)
-    }
-
-    SCHEDULER_JOB_DEFAULTS = {
-        'coalesce': False,
-        'max_instances': 3
-    }
-
-    SCHEDULER_API_ENABLED = True
-
+from entrepreneur.jobs import entrepreneur_ma_jobs, entrepreneur_lawsuits_jobs,entrepreneur_patents_jobs
 
 app = Flask(__name__)
 swagger = Swagger(app)
-app.config.from_object(Config())
-scheduler = BackgroundScheduler()
+scheduler=BackgroundScheduler(daemon=True)
+job1 = scheduler.add_job(entrepreneur_ma_jobs, 'interval', minutes=3)
+job2 = scheduler.add_job(entrepreneur_lawsuits_jobs, 'interval', minutes=3)
+job3 = scheduler.add_job(entrepreneur_patents_jobs, 'interval', minutes=3)
 scheduler.start()
-job = scheduler.add_job(entrepreneur, 'interval', minutes=2)
+
 
 app.register_blueprint(entrepreneur_blueprint, url_prefix='/api/v1/entre')
 
