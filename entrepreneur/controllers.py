@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify
 from flask import request
 from entrepreneur.base import entre_base
-
+from entrepreneur import logger
 
 entrepreneur_blueprint = Blueprint('entrepreneur', __name__)
 
@@ -30,4 +30,5 @@ def entrepreneur_api():
     """
     category = request.args.get('category')
     page = request.args.get('page')
+    logger.info('suucessful request to the page {0} of category {1} of entrepreneur'.format(page,category))
     return jsonify(entre_base(category=category, page=str(page)))

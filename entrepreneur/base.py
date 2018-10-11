@@ -43,7 +43,6 @@ def proxied_request(url, extra_headers={}, params={}):
     return resp
 
 
-
 def entre_base(category, page=1):
     try:
         entrepreneurDict = {}
@@ -52,37 +51,35 @@ def entre_base(category, page=1):
         link ='{0}/topic/{1}/{2}'.format(base_url,category,str(page))
         try:
             s = requests.Session()
-            request = requests.Request('GET', '{0}'.format(link))
+            request = s.get(link,proxies=proxies)
             prepared_request = s.prepare_request(request)
             response = s.send(prepared_request)
             soup = bs(response.content, 'lxml')
-            logger.info('successful request to entrepreneur connector {0} for page {1}'.format(link,page))
+            logger.info('successful request to entrepreneur connector {0}  with category {1} for page {2}'.format(link,category,page))
         except Exception as e:
             entrepreneurDict['success'] = False
             entrepreneurDict['errorMessage'] = str(e)
-            logger.warning('request to entrepreneur connector {0} failed: {1}'.format(link, str(e)))
+            logger.warning('request to entrepreneur connector {0}  with category {1} failed: {2} for page {3}'.format(link,category,str(e),page))
             return entrepreneurDict
-        data = []
         posted_at = ''
         if response.status_code == 200:
+            entrepreneurDict['data'] = []
             try:
                 card = soup.find_all('div', class_='block')
             except AttributeError:
                 card = []
-                data = []
+                return entrepreneurDict
             try:
                 unwanted_pages = soup.find('ul',class_='pagination').find_all('li')[-1]
                 unwanted_pages.extract()
                 total_pages = soup.find('ul',class_='pagination').find_all('li')[-1].text.strip()
             except Exception as e:
-                logger.warning('error in finding the total pages :{0} for page {1}'.format(str(e),page))
+                logger.warning('error in finding the total pages :{0} for page {1} category {2}'.format(str(e),page,category))
                 total_pages = 1
             entrepreneurDict['total_pages'] = total_pages
             for item in card:
                 content = ''
-                req1 = ''
                 obj = {}
-                entrepreneurDict['success'] = True
                 try:
                     titles = item.find('h3').text.strip()
                 except AttributeError:
@@ -94,19 +91,17 @@ def entre_base(category, page=1):
                     else:
                         url = '{0}{1}'.format(base_url,links)
                 except Exception as e:
-                    logger.warning('Error with url of the details page: {0}'.format(str(e)))
+                    logger.warning('Error with url of the details page: {0} category {1}'.format(str(e),category))
                     url = None
                 try:
                     s = requests.Session()
-                    request = requests.Request('GET', '{0}'.format(url))
+                    request = s.get(url,proxies=proxies)
                     prepared_request = s.prepare_request(request)
                     response1 = s.send(prepared_request)
                     soup1 = bs(response1.content, 'lxml')
-                    logger.warning('request to the content url {0} of entrepreneur connector is successful'.format(url))
+                    logger.info('request to the content url {0} of entrepreneur connector is successful for category {1} with page {2}'.format(url,category,page))
                 except Exception as e:
-                    entrepreneurDict['success'] = False
-                    entrepreneurDict['errorMessage'] = str(e)
-                    logger.error('request to the content url {0} of entreprenuer connector failed : {1}'.format(url,str(e)))
+                    logger.warning('request to the content url {0} of entreprenuer connector failed for category {1} page {2}: {3}'.format(url,category,page,str(e)))
                 try:
                     snip = item.find('div', class_='deck')
                     if snip is None:
@@ -128,17 +123,17 @@ def entre_base(category, page=1):
                         cont = ps.text.strip().replace('\xa0','')
                         cont = re.sub(r'[\n\r\t]','',cont)
                         content += cont
-                except AttributeError:
-                    contents = None
+                except Exception as e:
+                    logger.warning('error with the contents page {0} of entrepreneur category {1} : {2}'.format(url,category,str(e)))
+                    content = None
                 obj['title'] = titles
                 obj['url'] = url
                 obj['date'] = posted_at
                 obj['content'] = content
                 obj['category'] = category
                 obj['source'] = 'entrepreneur'
-                data.append(obj)
-            entrepreneurDict['data'] = data
+                entrepreneurDict['data'].append(obj)
             return entrepreneurDict
     except Exception as e:
-        logger.error('Error in scraping page {0} of the entrepreneur connector : {1}'.format(page, str(e)))
+        logger.error('Error in scraping page {0} of the entrepreneur connector category {1}: {2}'.format(page,category, str(e)))
         return None
